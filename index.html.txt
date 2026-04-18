@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P1Harmony 灵魂成员测试</title>
+    <style>
+        :root { --p1h-purple: #6a0dad; --p1h-gold: #ffd700; }
+        body { font-family: 'Helvetica Neue', sans-serif; background: #f4f4f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        #quiz-container { background: white; width: 90%; max-width: 500px; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+        .option-btn { display: block; width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #eee; border-radius: 10px; background: none; cursor: pointer; transition: 0.3s; font-size: 1rem; }
+        .option-btn:hover { border-color: var(--p1h-purple); background: #f3e5f5; }
+        #result { display: none; }
+        .member-name { font-size: 2rem; color: var(--p1h-purple); margin: 1rem 0; font-weight: bold; }
+        .progress { font-size: 0.8rem; color: #888; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+
+<div id="quiz-container">
+    <div id="question-side">
+        <div class="progress" id="progress">第 1 / 10 题</div>
+        <h2 id="question-text">加载中...</h2>
+        <div id="options-container"></div>
+    </div>
+
+    <div id="result">
+        <h2>你的灵魂伴侣/成员是...</h2>
+        <div class="member-name" id="member-name"></div>
+        <p id="member-desc"></p>
+        <button class="option-btn" onclick="location.reload()">再测一次</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        { q: "理想的下午你会做什么？", options: { "KEEHO":"聚会Party", "THEO":"安静看电影", "JIUNG":"学习新技能", "INTAK":"狂练舞", "SOUL":"放空发呆", "JONGSEOB":"写歌词" }},
+        { q: "团队吵架了你会？", options: { "KEEHO":"讲笑话缓和", "THEO":"默默陪伴", "JIUNG":"理性分析", "INTAK":"积极调和", "SOUL":"一脸懵逼", "JONGSEOB":"私下谈心" }},
+        { q: "面对负面评论？", options: { "KEEHO":"直接开麦吐槽", "THEO":"关机不看", "JIUNG":"思考并改进", "INTAK":"化为动力", "SOUL":"觉得人类复杂", "JONGSEOB":"写进歌里" }},
+        { q: "你的穿搭风格？", options: { "KEEHO":"时尚尖端", "THEO":"简单干净", "JIUNG":"精致质感", "INTAK":"街头运动", "SOUL":"独特审美", "JONGSEOB":"沉稳文艺" }},
+        { q: "无人岛必带？", options: { "KEEHO":"扩音器", "THEO":"睡袋", "JIUNG":"百科全书", "INTAK":"蓝牙音箱", "SOUL":"奇奇怪怪零食", "JONGSEOB":"笔记和笔" }},
+        { q: "考试演出前？", options: { "KEEHO":"大声唱歌解压", "THEO":"冷静按节奏来", "JIUNG":"反复检查细节", "INTAK":"疯狂练习", "SOUL":"盯着天花板", "JONGSEOB":"意象训练" }},
+        { q: "吃到美食时？", options: { "KEEHO":"拍美照发动态", "THEO":"安静吃完", "JIUNG":"研究配料", "INTAK":"强行安利别人", "SOUL":"给食物起名", "JONGSEOB":"心里默默打分" }},
+        { q: "想要哪种超能力？", options: { "KEEHO":"瞬移", "THEO":"隐身", "JIUNG":"过目不忘", "INTAK":"永动机体力", "SOUL":"跟动物说话", "JONGSEOB":"预知未来" }},
+        { q: "朋友emo时你会？", options: { "KEEHO":"带他去嗨", "THEO":"递纸巾倾听", "JIUNG":"梳理逻辑", "INTAK":"温暖拥抱", "SOUL":"做鬼脸逗乐", "JONGSEOB":"写走心文字" }},
+        { q: "你的生命关键词？", options: { "KEEHO":"Icon", "THEO":"Peace", "JIUNG":"Perfect", "INTAK":"Passion", "SOUL":"Wonder", "JONGSEOB":"Art" }}
+    ];
+
+    const descs = {
+        "KEEHO": "天生的领导者！你幽默、自信，总能成为人群的中心。",
+        "THEO": "你是团队的定海神针，性格稳重，有着极强的内心世界。",
+        "JIUNG": "全能智多星！你逻辑严密，追求完美，是可靠的代名词。",
+        "INTAK": "热情如火！你的能量永远满格，对热爱的追求无懈可击。",
+        "SOUL": "独特的艺术家！你拥有最纯真的四次元灵魂，世界因你而有趣。",
+        "JONGSEOB": "深度思考者。你才华横溢且细腻沉稳，用作品表达灵魂。"
+    };
+
+    let currentQ = 0;
+    let scores = { "KEEHO":0, "THEO":0, "JIUNG":0, "INTAK":0, "SOUL":0, "JONGSEOB":0 };
+
+    function showQuestion() {
+        if(currentQ >= questions.length) return showResult();
+        document.getElementById('progress').innerText = `第 ${currentQ + 1} / 10 题`;
+        document.getElementById('question-text').innerText = questions[currentQ].q;
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        for(let key in questions[currentQ].options) {
+            let btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = questions[currentQ].options[key];
+            btn.onclick = () => { scores[key]++; currentQ++; showQuestion(); };
+            container.appendChild(btn);
+        }
+    }
+
+    function showResult() {
+        document.getElementById('question-side').style.display = 'none';
+        document.getElementById('result').style.display = 'block';
+        let winner = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+        document.getElementById('member-name').innerText = winner;
+        document.getElementById('member-desc').innerText = descs[winner];
+    }
+
+    showQuestion();
+</script>
+</body>
+</html>
